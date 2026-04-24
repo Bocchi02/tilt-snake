@@ -1,9 +1,8 @@
 const GRID_SIZE = 18;
-const BASE_SPEED = 7;
-const SPEED_GAIN = 0.12;
-const SENSOR_TURN_THRESHOLD = 17;
-const SENSOR_RELEASE_THRESHOLD = 7;
-const INPUT_COOLDOWN = 140;
+const BASE_SPEED = 5.8;
+const SPEED_GAIN = 0.1;
+const SENSOR_TURN_THRESHOLD = 10;
+const INPUT_COOLDOWN = 95;
 const STORAGE_KEY = "tilt-snake-high-score";
 
 const canvas = document.getElementById("game-canvas");
@@ -67,7 +66,7 @@ highScoreElement.textContent = state.highScore;
 
 // The sensor controller keeps device tilt code separate from game logic.
 // It smooths noisy readings, remembers a neutral "resting" angle, and
-// turns the snake left or right only after a deliberate lean past the threshold.
+// keeps turning while the phone stays leaned left or right past the threshold.
 const sensorController = {
   active: false,
   permissionRequired: typeof DeviceOrientationEvent !== "undefined"
@@ -79,7 +78,6 @@ const sensorController = {
   smoothedGamma: 0,
   neutralGamma: 0,
   hasNeutral: false,
-  turnArmed: true,
   lastDirectionTime: 0,
 
   async ensurePermission() {
@@ -112,7 +110,7 @@ const sensorController = {
       this.smoothedGamma = this.currentGamma;
       this.hasReading = true;
     } else {
-      this.smoothedGamma = this.smoothedGamma * 0.82 + this.currentGamma * 0.18;
+      this.smoothedGamma = this.smoothedGamma * 0.68 + this.currentGamma * 0.32;
     }
 
     if (!this.hasNeutral) {
@@ -125,7 +123,6 @@ const sensorController = {
   setNeutral() {
     this.neutralGamma = this.smoothedGamma;
     this.hasNeutral = true;
-    this.turnArmed = true;
   },
 
   maybeQueueDirection(now) {
@@ -136,16 +133,11 @@ const sensorController = {
     const horizontalTilt = this.smoothedGamma - this.neutralGamma;
     const horizontalStrength = Math.abs(horizontalTilt);
 
-    if (horizontalStrength <= SENSOR_RELEASE_THRESHOLD) {
-      this.turnArmed = true;
-      return;
-    }
-
-    if (!this.turnArmed || now - this.lastDirectionTime < INPUT_COOLDOWN) {
-      return;
-    }
-
     if (horizontalStrength < SENSOR_TURN_THRESHOLD) {
+      return;
+    }
+
+    if (now - this.lastDirectionTime < INPUT_COOLDOWN) {
       return;
     }
 
@@ -153,7 +145,6 @@ const sensorController = {
 
     if (queueRelativeTurn(turnSide)) {
       this.lastDirectionTime = now;
-      this.turnArmed = false;
     }
   },
 };
