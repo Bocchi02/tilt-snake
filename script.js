@@ -1,8 +1,7 @@
 const GRID_SIZE = 18;
-const BASE_SPEED = 5.8;
-const SPEED_GAIN = 0.1;
+const BASE_SPEED = 5.1;
+const SPEED_GAIN = 0.08;
 const SENSOR_TURN_THRESHOLD = 10;
-const GYRO_INPUT_TICK_MS = 95;
 const GYRO_CENTER_DEADZONE = 2.5;
 const GYRO_MONITOR_MAX_TILT = 20;
 const STORAGE_KEY = "tilt-snake-high-score";
@@ -73,6 +72,7 @@ highScoreElement.textContent = state.highScore;
 // The sensor controller keeps device tilt code separate from game logic.
 // It smooths noisy readings, remembers a neutral "resting" angle, and
 // keeps turning while the phone stays leaned left or right past the threshold.
+// Its turn cadence matches the snake step rate for more predictable steering.
 const sensorController = {
   active: false,
   permissionRequired: typeof DeviceOrientationEvent !== "undefined"
@@ -145,7 +145,7 @@ const sensorController = {
       return;
     }
 
-    if (now - this.lastDirectionTime < GYRO_INPUT_TICK_MS) {
+    if (now - this.lastDirectionTime < getCurrentGyroTickRate()) {
       return;
     }
 
@@ -167,7 +167,7 @@ function clamp(value, min, max) {
 }
 
 function updateGyroMonitor(horizontalTilt = 0, hasNeutral = sensorController.hasNeutral) {
-  gyroTickRateElement.textContent = `${GYRO_INPUT_TICK_MS} ms/tick`;
+  gyroTickRateElement.textContent = `${Math.round(getCurrentGyroTickRate())} ms/tick`;
 
   if (!hasNeutral) {
     gyroCenterLabelElement.textContent = "Waiting for calibration";
@@ -463,6 +463,10 @@ function render() {
 function getCurrentStepDuration() {
   const speed = BASE_SPEED + state.score * SPEED_GAIN;
   return 1000 / speed;
+}
+
+function getCurrentGyroTickRate() {
+  return getCurrentStepDuration();
 }
 
 function gameLoop(timestamp) {
