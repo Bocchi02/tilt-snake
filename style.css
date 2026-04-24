@@ -398,6 +398,44 @@ h2 {
   .game-panel {
     padding: 18px;
   }
+
+  .app-overlay {
+    padding:
+      max(24px, env(safe-area-inset-top))
+      max(24px, env(safe-area-inset-right))
+      max(24px, env(safe-area-inset-bottom))
+      max(24px, env(safe-area-inset-left));
+  }
+
+  .overlay-card-compact {
+    width: min(100%, 520px);
+    max-height: min(84dvh, 640px);
+    padding: 30px 28px;
+  }
+
+  .overlay-card-compact h2 {
+    font-size: clamp(2rem, 3vw, 2.8rem);
+  }
+
+  .overlay-card-compact .overlay-copy,
+  .overlay-card-compact .instruction-list,
+  .overlay-card-compact .permission-note {
+    font-size: 1.02rem;
+  }
+
+  .overlay-card-compact .instruction-list {
+    margin: 20px 0;
+    padding-left: 22px;
+  }
+
+  .overlay-card-compact .overlay-actions {
+    margin-top: 22px;
+  }
+
+  .overlay-card-compact .primary-button {
+    min-height: 54px;
+    font-size: 1rem;
+  }
 }
 
 @media (max-width: 420px) {
