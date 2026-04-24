@@ -55,27 +55,6 @@
       <div class="canvas-shell">
         <canvas id="game-canvas" aria-label="Tilt Snake game area"></canvas>
 
-        <section class="overlay overlay-visible" id="start-screen" aria-live="polite">
-          <div class="overlay-card overlay-card-compact">
-            <p class="overlay-kicker">Cyber Garden // Init</p>
-            <h2>Steer with your phone</h2>
-            <p class="overlay-copy">
-              Hold your phone upright, keep it centered, then tilt left or right to steer.
-            </p>
-            <ul class="instruction-list">
-              <li>Tilt left to turn left relative to the snake's current path.</li>
-              <li>Tilt right to turn right relative to the snake's current path.</li>
-              <li>Eat neon food, grow longer, avoid walls and yourself.</li>
-            </ul>
-            <p class="permission-note">
-              Motion sensors often need HTTPS or localhost, and iPhone/iPad may ask for permission.
-            </p>
-            <div class="overlay-actions">
-              <button id="start-button" class="primary-button" type="button">Start Game</button>
-            </div>
-          </div>
-        </section>
-
         <section class="overlay" id="game-over-screen" aria-live="polite">
           <div class="overlay-card">
             <p class="overlay-kicker">Signal Lost</p>
@@ -92,6 +71,27 @@
         <p class="tip">
           Tip: Tap <strong>Recenter Tilt</strong> if the steering feels offset after rotating your phone.
         </p>
+      </div>
+    </section>
+
+    <section class="overlay app-overlay overlay-visible" id="start-screen" aria-live="polite">
+      <div class="overlay-card overlay-card-compact">
+        <p class="overlay-kicker">Cyber Garden // Init</p>
+        <h2>Steer with your phone</h2>
+        <p class="overlay-copy">
+          Hold your phone upright, keep it centered, then tilt left or right to steer.
+        </p>
+        <ul class="instruction-list">
+          <li>Tilt left to turn left relative to the snake's current path.</li>
+          <li>Tilt right to turn right relative to the snake's current path.</li>
+          <li>Eat neon food, grow longer, avoid walls and yourself.</li>
+        </ul>
+        <p class="permission-note">
+          Motion sensors often need HTTPS or localhost, and iPhone/iPad may ask for permission.
+        </p>
+        <div class="overlay-actions">
+          <button id="start-button" class="primary-button" type="button">Start Game</button>
+        </div>
       </div>
     </section>
   </main>

@@ -53,6 +53,7 @@ body::before {
 }
 
 .app-shell {
+  position: relative;
   width: min(100%, 540px);
   min-height: 100dvh;
   margin: 0 auto;
@@ -291,6 +292,17 @@ h2 {
   backdrop-filter: blur(10px);
 }
 
+.app-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  padding:
+    max(14px, env(safe-area-inset-top))
+    max(14px, env(safe-area-inset-right))
+    max(14px, env(safe-area-inset-bottom))
+    max(14px, env(safe-area-inset-left));
+}
+
 .overlay-visible {
   display: flex;
 }
@@ -415,6 +427,14 @@ h2 {
     padding: 12px;
   }
 
+  .app-overlay {
+    padding:
+      max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+  }
+
   .overlay-card {
     width: min(100%, 320px);
     padding: 18px 16px;
@@ -513,6 +533,14 @@ h2 {
 
   .overlay {
     padding: 12px;
+  }
+
+  .app-overlay {
+    padding:
+      max(10px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(10px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left));
   }
 
   .overlay-card {
