@@ -1,9 +1,9 @@
 const GRID_SIZE = 18;
 const BASE_SPEED = 7;
 const SPEED_GAIN = 0.12;
-const SENSOR_THRESHOLD = 11;
-const AXIS_PRIORITY_GAP = 4;
-const INPUT_COOLDOWN = 90;
+const SENSOR_TURN_THRESHOLD = 17;
+const SENSOR_RELEASE_THRESHOLD = 7;
+const INPUT_COOLDOWN = 140;
 const STORAGE_KEY = "tilt-snake-high-score";
 
 const canvas = document.getElementById("game-canvas");
@@ -35,6 +35,20 @@ const oppositeDirections = {
   right: "left",
 };
 
+const leftTurnMap = {
+  up: "left",
+  left: "down",
+  down: "right",
+  right: "up",
+};
+
+const rightTurnMap = {
+  up: "right",
+  right: "down",
+  down: "left",
+  left: "up",
+};
+
 const state = {
   mode: "start",
   snake: [],
@@ -53,7 +67,7 @@ highScoreElement.textContent = state.highScore;
 
 // The sensor controller keeps device tilt code separate from game logic.
 // It smooths noisy readings, remembers a neutral "resting" angle, and
-// only emits a direction when the phone is tilted far enough past a threshold.
+// turns the snake left or right only after a deliberate lean past the threshold.
 const sensorController = {
   active: false,
   permissionRequired: typeof DeviceOrientationEvent !== "undefined"
@@ -62,12 +76,10 @@ const sensorController = {
   awaitingCalibration: false,
   hasReading: false,
   currentGamma: 0,
-  currentBeta: 0,
   smoothedGamma: 0,
-  smoothedBeta: 0,
   neutralGamma: 0,
-  neutralBeta: 0,
   hasNeutral: false,
+  turnArmed: true,
   lastDirectionTime: 0,
 
   async ensurePermission() {
@@ -85,7 +97,7 @@ const sensorController = {
   },
 
   handleOrientation(event) {
-    if (typeof event.gamma !== "number" || typeof event.beta !== "number") {
+    if (typeof event.gamma !== "number") {
       return;
     }
 
@@ -93,30 +105,27 @@ const sensorController = {
     this.usingFallback = false;
     this.awaitingCalibration = false;
     this.currentGamma = event.gamma;
-    this.currentBeta = event.beta;
 
     // A low-pass filter softens sudden spikes, which makes steering feel
     // more intentional and prevents tiny shakes from whipping the snake around.
     if (!this.hasReading) {
       this.smoothedGamma = this.currentGamma;
-      this.smoothedBeta = this.currentBeta;
       this.hasReading = true;
     } else {
       this.smoothedGamma = this.smoothedGamma * 0.82 + this.currentGamma * 0.18;
-      this.smoothedBeta = this.smoothedBeta * 0.82 + this.currentBeta * 0.18;
     }
 
     if (!this.hasNeutral) {
       this.setNeutral();
     }
 
-    updateSensorStatus("Tilt active", "active");
+    updateSensorStatus("Steering active", "active");
   },
 
   setNeutral() {
     this.neutralGamma = this.smoothedGamma;
-    this.neutralBeta = this.smoothedBeta;
     this.hasNeutral = true;
+    this.turnArmed = true;
   },
 
   maybeQueueDirection(now) {
@@ -124,37 +133,27 @@ const sensorController = {
       return;
     }
 
-    if (now - this.lastDirectionTime < INPUT_COOLDOWN) {
-      return;
-    }
-
     const horizontalTilt = this.smoothedGamma - this.neutralGamma;
-    const verticalTilt = this.smoothedBeta - this.neutralBeta;
-
     const horizontalStrength = Math.abs(horizontalTilt);
-    const verticalStrength = Math.abs(verticalTilt);
 
-    let nextDirection = null;
-
-    if (
-      horizontalStrength > SENSOR_THRESHOLD &&
-      horizontalStrength >= verticalStrength + AXIS_PRIORITY_GAP
-    ) {
-      nextDirection = horizontalTilt < 0 ? "left" : "right";
-    } else if (
-      verticalStrength > SENSOR_THRESHOLD &&
-      verticalStrength >= horizontalStrength + AXIS_PRIORITY_GAP
-    ) {
-      // Negative beta usually means the top edge tilted forward/up.
-      nextDirection = verticalTilt < 0 ? "up" : "down";
-    }
-
-    if (!nextDirection) {
+    if (horizontalStrength <= SENSOR_RELEASE_THRESHOLD) {
+      this.turnArmed = true;
       return;
     }
 
-    if (queueDirection(nextDirection)) {
+    if (!this.turnArmed || now - this.lastDirectionTime < INPUT_COOLDOWN) {
+      return;
+    }
+
+    if (horizontalStrength < SENSOR_TURN_THRESHOLD) {
+      return;
+    }
+
+    const turnSide = horizontalTilt < 0 ? "left" : "right";
+
+    if (queueRelativeTurn(turnSide)) {
       this.lastDirectionTime = now;
+      this.turnArmed = false;
     }
   },
 };
@@ -227,6 +226,15 @@ function queueDirection(nextDirection) {
   return true;
 }
 
+function queueRelativeTurn(turnSide) {
+  const referenceDirection = state.pendingDirection || state.direction;
+  const nextDirection = turnSide === "left"
+    ? leftTurnMap[referenceDirection]
+    : rightTurnMap[referenceDirection];
+
+  return queueDirection(nextDirection);
+}
+
 function startGame() {
   resetGame();
   state.mode = "running";
@@ -235,11 +243,11 @@ function startGame() {
   gameOverScreen.classList.remove("overlay-visible");
   if (sensorController.active) {
     sensorController.setNeutral();
-    updateSensorStatus("Tilt active", "active");
+    updateSensorStatus("Steering active", "active");
   } else if (sensorController.awaitingCalibration) {
     updateSensorStatus("Awaiting tilt data...", "warning");
   } else {
-    updateSensorStatus("Keyboard fallback ready", "warning");
+    updateSensorStatus("Keyboard steering ready", "warning");
   }
 }
 
@@ -441,13 +449,7 @@ function gameLoop(timestamp) {
 }
 
 function handleKeyboard(event) {
-  const keyMap = {
-    ArrowUp: "up",
-    w: "up",
-    W: "up",
-    ArrowDown: "down",
-    s: "down",
-    S: "down",
+  const turnKeyMap = {
     ArrowLeft: "left",
     a: "left",
     A: "left",
@@ -456,18 +458,49 @@ function handleKeyboard(event) {
     D: "right",
   };
 
-  const nextDirection = keyMap[event.key];
+  const turnSide = turnKeyMap[event.key];
 
-  if (!nextDirection) {
+  if (!turnSide) {
     return;
   }
 
   event.preventDefault();
-  queueDirection(nextDirection);
+  queueRelativeTurn(turnSide);
 
   if (!sensorController.active) {
     sensorController.usingFallback = true;
-    updateSensorStatus("Keyboard fallback active", "warning");
+    updateSensorStatus("Keyboard steering active", "warning");
+  }
+}
+
+function isMobileLandscape() {
+  return window.matchMedia("(pointer: coarse)").matches
+    && window.matchMedia("(orientation: landscape)").matches;
+}
+
+async function requestMobileFullscreen() {
+  if (!isMobileLandscape() || document.fullscreenElement) {
+    return;
+  }
+
+  const target = document.documentElement;
+
+  if (!target.requestFullscreen) {
+    return;
+  }
+
+  try {
+    await target.requestFullscreen({ navigationUI: "hide" });
+  } catch (error) {
+    console.warn("Fullscreen request was not granted:", error);
+  }
+
+  if (screen.orientation?.lock) {
+    try {
+      await screen.orientation.lock("landscape");
+    } catch (error) {
+      console.warn("Orientation lock was not granted:", error);
+    }
   }
 }
 
@@ -547,6 +580,7 @@ const soundEngine = {
 };
 
 async function prepareAndStartGame() {
+  requestMobileFullscreen();
   soundEngine.ensureContext();
   sensorController.usingFallback = false;
 
@@ -554,7 +588,7 @@ async function prepareAndStartGame() {
     const granted = await sensorController.ensurePermission();
 
     if (!granted) {
-      updateSensorStatus("Motion permission denied. Use keyboard fallback.", "error");
+      updateSensorStatus("Motion permission denied. Use keyboard steering.", "error");
       sensorController.active = false;
       startGame();
       return;
@@ -562,7 +596,7 @@ async function prepareAndStartGame() {
   }
 
   if (!("DeviceOrientationEvent" in window)) {
-    updateSensorStatus("Motion sensors unavailable. Use keyboard fallback.", "error");
+    updateSensorStatus("Motion sensors unavailable. Use keyboard steering.", "error");
     sensorController.active = false;
     startGame();
     return;
@@ -590,7 +624,7 @@ startButton.addEventListener("click", prepareAndStartGame);
 restartButton.addEventListener("click", prepareAndStartGame);
 calibrateButton.addEventListener("click", () => {
   sensorController.setNeutral();
-  updateSensorStatus(sensorController.active ? "Tilt recentered" : "No motion data yet", sensorController.active ? "active" : "warning");
+  updateSensorStatus(sensorController.active ? "Steering recentered" : "No motion data yet", sensorController.active ? "active" : "warning");
 });
 
 resizeCanvas();
