@@ -1,9 +1,9 @@
 const GRID_SIZE = 18;
-const BASE_SPEED = 5.1;
+const BASE_SPEED = 3;
 const SPEED_GAIN = 0.08;
-const SENSOR_TURN_THRESHOLD = 10;
+const SENSOR_TURN_THRESHOLD = 35;
 const GYRO_CENTER_DEADZONE = 2.5;
-const GYRO_MONITOR_MAX_TILT = 20;
+const GYRO_MONITOR_MAX_TILT = 40;
 const STORAGE_KEY = "tilt-snake-high-score";
 
 const canvas = document.getElementById("game-canvas");
