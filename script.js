@@ -2,7 +2,9 @@ const GRID_SIZE = 18;
 const BASE_SPEED = 5.8;
 const SPEED_GAIN = 0.1;
 const SENSOR_TURN_THRESHOLD = 10;
-const INPUT_COOLDOWN = 95;
+const GYRO_INPUT_TICK_MS = 95;
+const GYRO_CENTER_DEADZONE = 2.5;
+const GYRO_MONITOR_MAX_TILT = 20;
 const STORAGE_KEY = "tilt-snake-high-score";
 
 const canvas = document.getElementById("game-canvas");
@@ -13,6 +15,10 @@ const highScoreElement = document.getElementById("high-score");
 const sensorStatusElement = document.getElementById("sensor-status");
 const sensorDotElement = document.getElementById("sensor-dot");
 const finalScoreElement = document.getElementById("final-score");
+const gyroCenterLabelElement = document.getElementById("gyro-center-label");
+const gyroOffsetValueElement = document.getElementById("gyro-offset-value");
+const gyroTickRateElement = document.getElementById("gyro-tick-rate");
+const gyroBarIndicatorElement = document.getElementById("gyro-bar-indicator");
 
 const startScreen = document.getElementById("start-screen");
 const gameOverScreen = document.getElementById("game-over-screen");
@@ -117,12 +123,14 @@ const sensorController = {
       this.setNeutral();
     }
 
+    updateGyroMonitor(this.smoothedGamma - this.neutralGamma, this.hasNeutral);
     updateSensorStatus("Steering active", "active");
   },
 
   setNeutral() {
     this.neutralGamma = this.smoothedGamma;
     this.hasNeutral = true;
+    updateGyroMonitor(0, true);
   },
 
   maybeQueueDirection(now) {
@@ -137,7 +145,7 @@ const sensorController = {
       return;
     }
 
-    if (now - this.lastDirectionTime < INPUT_COOLDOWN) {
+    if (now - this.lastDirectionTime < GYRO_INPUT_TICK_MS) {
       return;
     }
 
@@ -152,6 +160,46 @@ const sensorController = {
 function updateSensorStatus(message, tone = "warning") {
   sensorStatusElement.textContent = message;
   sensorDotElement.className = `sensor-dot ${tone}`;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function updateGyroMonitor(horizontalTilt = 0, hasNeutral = sensorController.hasNeutral) {
+  gyroTickRateElement.textContent = `${GYRO_INPUT_TICK_MS} ms/tick`;
+
+  if (!hasNeutral) {
+    gyroCenterLabelElement.textContent = "Waiting for calibration";
+    gyroOffsetValueElement.textContent = "Offset 0.0°";
+    gyroBarIndicatorElement.className = "gyro-bar-indicator";
+    gyroBarIndicatorElement.style.transform = "translate(-50%, -50%)";
+    return;
+  }
+
+  const absoluteTilt = Math.abs(horizontalTilt);
+  const normalizedTilt = clamp(horizontalTilt / GYRO_MONITOR_MAX_TILT, -1, 1);
+  const offsetX = normalizedTilt * 42;
+
+  gyroOffsetValueElement.textContent = `Offset ${horizontalTilt.toFixed(1)}°`;
+  gyroBarIndicatorElement.style.transform = `translate(calc(-50% + ${offsetX}px), -50%)`;
+
+  if (absoluteTilt <= GYRO_CENTER_DEADZONE) {
+    gyroCenterLabelElement.textContent = "Centered";
+    gyroBarIndicatorElement.className = "gyro-bar-indicator centered";
+    return;
+  }
+
+  if (absoluteTilt >= SENSOR_TURN_THRESHOLD) {
+    gyroCenterLabelElement.textContent = horizontalTilt < 0 ? "Turning Left Zone" : "Turning Right Zone";
+    gyroBarIndicatorElement.className = absoluteTilt >= GYRO_MONITOR_MAX_TILT
+      ? "gyro-bar-indicator extreme"
+      : "gyro-bar-indicator off-center";
+    return;
+  }
+
+  gyroCenterLabelElement.textContent = horizontalTilt < 0 ? "Leaning Left" : "Leaning Right";
+  gyroBarIndicatorElement.className = "gyro-bar-indicator off-center";
 }
 
 function resizeCanvas() {
@@ -237,8 +285,10 @@ function startGame() {
     updateSensorStatus("Steering active", "active");
   } else if (sensorController.awaitingCalibration) {
     updateSensorStatus("Awaiting tilt data...", "warning");
+    updateGyroMonitor(0, false);
   } else {
     updateSensorStatus("Keyboard steering ready", "warning");
+    updateGyroMonitor(0, false);
   }
 }
 
@@ -596,6 +646,7 @@ async function prepareAndStartGame() {
   updateSensorStatus("Hold still for calibration...", "warning");
   sensorController.hasNeutral = false;
   sensorController.awaitingCalibration = true;
+  updateGyroMonitor(0, false);
   startGame();
 }
 
@@ -622,4 +673,5 @@ resizeCanvas();
 resetGame();
 render();
 updateSensorStatus("Tap Start to enable controls", "warning");
+updateGyroMonitor(0, false);
 requestAnimationFrame(gameLoop);

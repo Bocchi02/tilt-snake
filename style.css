@@ -182,6 +182,86 @@ h2 {
   box-shadow: 0 0 12px rgba(255, 85, 127, 0.8);
 }
 
+.gyro-monitor {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gyro-monitor-head,
+.gyro-monitor-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gyro-monitor-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+#gyro-center-label {
+  font-size: 0.9rem;
+}
+
+.gyro-monitor-meta {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.83rem;
+}
+
+.gyro-bar {
+  position: relative;
+  height: 16px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(255, 85, 127, 0.16), rgba(77, 247, 255, 0.08) 50%, rgba(77, 255, 143, 0.16));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.gyro-bar-center {
+  position: absolute;
+  inset: 2px auto 2px 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.gyro-bar-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 14px rgba(77, 247, 255, 0.75);
+  transform: translate(-50%, -50%);
+  transition: transform 90ms linear, background 140ms ease, box-shadow 140ms ease;
+}
+
+.gyro-bar-indicator.centered {
+  background: var(--success);
+  box-shadow: 0 0 14px rgba(77, 255, 143, 0.75);
+}
+
+.gyro-bar-indicator.off-center {
+  background: var(--food);
+  box-shadow: 0 0 14px rgba(255, 211, 77, 0.75);
+}
+
+.gyro-bar-indicator.extreme {
+  background: var(--danger);
+  box-shadow: 0 0 14px rgba(255, 85, 127, 0.8);
+}
+
 .canvas-shell {
   position: relative;
   min-height: 0;
@@ -375,7 +455,8 @@ h2 {
     flex-wrap: wrap;
   }
 
-  .sensor-pill {
+  .sensor-pill,
+  .gyro-monitor {
     flex: 1;
     min-width: 0;
   }

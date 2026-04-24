@@ -37,6 +37,21 @@
         <button id="calibrate-button" class="ghost-button" type="button">Recenter Tilt</button>
       </div>
 
+      <section class="gyro-monitor" aria-label="Gyro monitor">
+        <div class="gyro-monitor-head">
+          <span class="gyro-monitor-label">Gyro Center</span>
+          <strong id="gyro-center-label">Waiting for calibration</strong>
+        </div>
+        <div class="gyro-bar">
+          <span class="gyro-bar-center"></span>
+          <span class="gyro-bar-indicator" id="gyro-bar-indicator"></span>
+        </div>
+        <div class="gyro-monitor-meta">
+          <span id="gyro-offset-value">Offset 0.0&deg;</span>
+          <span id="gyro-tick-rate">95 ms/tick</span>
+        </div>
+      </section>
+
       <div class="canvas-shell">
         <canvas id="game-canvas" aria-label="Tilt Snake game area"></canvas>
 
