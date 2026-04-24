@@ -304,6 +304,12 @@ h2 {
   box-shadow: var(--shadow);
 }
 
+.overlay-card-compact {
+  width: min(100%, 330px);
+  max-height: min(78dvh, 500px);
+  overflow: auto;
+}
+
 .overlay-copy,
 .permission-note,
 .tip {
@@ -404,6 +410,41 @@ h2 {
   .ghost-button {
     width: 100%;
   }
+
+  .overlay {
+    padding: 12px;
+  }
+
+  .overlay-card {
+    width: min(100%, 320px);
+    padding: 18px 16px;
+    border-radius: 20px;
+  }
+
+  .overlay-card-compact {
+    max-height: min(74dvh, 430px);
+  }
+
+  .overlay-kicker {
+    margin-bottom: 4px;
+    font-size: 0.66rem;
+  }
+
+  .overlay-copy,
+  .permission-note,
+  .instruction-list {
+    font-size: 0.92rem;
+  }
+
+  .instruction-list {
+    margin: 12px 0;
+    padding-left: 16px;
+    line-height: 1.4;
+  }
+
+  .overlay-actions {
+    margin-top: 14px;
+  }
 }
 
 @media (orientation: landscape) and (max-height: 560px) {
@@ -477,6 +518,10 @@ h2 {
   .overlay-card {
     width: min(100%, 420px);
     padding: 18px;
+  }
+
+  .overlay-card-compact {
+    max-height: min(82dvh, 360px);
   }
 
   .instruction-list {
