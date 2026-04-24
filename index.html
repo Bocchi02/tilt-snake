@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Tilt Snake</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hud-card">
+      <div>
+        <p class="eyebrow">Motion-powered arcade</p>
+        <h1>Tilt Snake</h1>
+      </div>
+      <div class="scoreboard" aria-label="Scoreboard">
+        <div class="score-box">
+          <span class="score-label">Score</span>
+          <strong id="score">0</strong>
+        </div>
+        <div class="score-box">
+          <span class="score-label">High</span>
+          <strong id="high-score">0</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="game-panel">
+      <div class="panel-top">
+        <div class="sensor-pill">
+          <span class="sensor-dot" id="sensor-dot"></span>
+          <span id="sensor-status">Waiting to start</span>
+        </div>
+        <button id="calibrate-button" class="ghost-button" type="button">Recenter Tilt</button>
+      </div>
+
+      <div class="canvas-shell">
+        <canvas id="game-canvas" aria-label="Tilt Snake game area"></canvas>
+
+        <section class="overlay overlay-visible" id="start-screen" aria-live="polite">
+          <div class="overlay-card">
+            <p class="overlay-kicker">Cyber Garden // Init</p>
+            <h2>Steer with your phone</h2>
+            <p class="overlay-copy">
+              Hold your phone upright, keep it centered, then tilt to guide the snake.
+              Keyboard fallback also works on desktop with arrow keys or WASD.
+            </p>
+            <ul class="instruction-list">
+              <li>Tilt left or right to change lanes.</li>
+              <li>Tilt forward to move up, backward to move down.</li>
+              <li>Eat neon food, grow longer, avoid walls and yourself.</li>
+            </ul>
+            <p class="permission-note">
+              Motion sensors often need HTTPS or localhost, and iPhone/iPad may ask for permission.
+            </p>
+            <div class="overlay-actions">
+              <button id="start-button" class="primary-button" type="button">Start Game</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="overlay" id="game-over-screen" aria-live="polite">
+          <div class="overlay-card">
+            <p class="overlay-kicker">Signal Lost</p>
+            <h2>Game Over</h2>
+            <p class="overlay-copy">Your final score: <strong id="final-score">0</strong></p>
+            <div class="overlay-actions">
+              <button id="restart-button" class="primary-button" type="button">Play Again</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="panel-bottom">
+        <p class="tip">
+          Tip: Tap <strong>Recenter Tilt</strong> if the snake feels offset after rotating your phone.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
